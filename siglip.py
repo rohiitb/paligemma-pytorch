@@ -11,17 +11,17 @@ class SiglipVisionEmbeddings(nn.Module):
         self.config = config
 
         self.patch_embeddings = nn.Conv2d(
-            config.num_channels.value,
-            config.hidden_size.value,
-            kernel_size=config.patch_size.value,
-            stride=config.patch_size.value,
+            config.num_channels,
+            config.hidden_size,
+            kernel_size=config.patch_size,
+            stride=config.patch_size,
             padding="valid",
         )
 
-        self.num_patches = (config.image_size.value // config.patch_size.value) ** 2
+        self.num_patches = (config.image_size // config.patch_size) ** 2
 
         self.position_embeddings = nn.Embedding(
-            self.num_patches, config.hidden_size.value
+            self.num_patches, config.hidden_size
         )
 
         self.register_buffer(
@@ -42,8 +42,8 @@ class SiglipMLP(nn.Module):
     def __init__(self, config: SiglipVisionConfig):
         super().__init__()
         self.config = config
-        self.fc1 = nn.Linear(config.hidden_size.value, config.intermediate_size.value)
-        self.fc2 = nn.Linear(config.intermediate_size.value, config.hidden_size.value)
+        self.fc1 = nn.Linear(config.hidden_size, config.intermediate_size)
+        self.fc2 = nn.Linear(config.intermediate_size, config.hidden_size)
 
     def forward(self, hidden_states: torch.Tensor):
         hidden_states = self.fc1(hidden_states)
@@ -54,10 +54,10 @@ class SiglipMLP(nn.Module):
 class SiglipVisionAttention(nn.Module):
     def __init__(self, config: SiglipVisionConfig):
         self.config = config
-        self.embed_dim = config.hidden_size.value
-        self.num_attention_heads = config.num_attention_heads.value
+        self.embed_dim = config.hidden_size
+        self.num_attention_heads = config.num_attention_heads
         self.head_dim = self.embed_dim // self.num_attention_heads
-        self.attention_dropout = config.attention_dropout.value
+        self.attention_dropout = config.attention_dropout
         self.scale = self.head_dim ** -0.5
 
         self.k_proj = nn.Linear(self.embed_dim, self.embed_dim)
@@ -104,10 +104,10 @@ class SiglipVisionEncoderLayer(nn.Module):
         self.attention = SiglipVisionAttention(config)
         self.mlp = SiglipMLP(config)
         self.layer_norm1 = nn.LayerNorm(
-            config.hidden_size.value, eps=config.layer_norm_eps.value
+            config.hidden_size, eps=config.layer_norm_eps
         )
         self.layer_norm2 = nn.LayerNorm(
-            config.hidden_size.value, eps=config.layer_norm_eps.value
+            config.hidden_size, eps=config.layer_norm_eps
         )
 
     def forward(self, hidden_states: torch.Tensor):
@@ -126,7 +126,7 @@ class SiglipVisionEncoder(nn.Module):
     def __init__(self, config: SiglipVisionConfig):
         super().__init__()
         self.config = config
-        self.layers = nn.ModuleList([SiglipVisionEncoderLayer(config) for _ in range(config.num_hidden_layers.value)])
+        self.layers = nn.ModuleList([SiglipVisionEncoderLayer(config) for _ in range(config.num_hidden_layers)])
 
     def forward(self, hidden_states: torch.Tensor):
         for layer in self.layers:
@@ -141,7 +141,7 @@ class SiglipVisionTransformer(nn.Module):
         self.encoder = SiglipVisionEncoder(config)
         self.embeddings = SiglipVisionEmbeddings(config)
         self.post_layernorm = nn.LayerNorm(
-            config.hidden_size.value, eps=config.layer_norm_eps.value
+            config.hidden_size, eps=config.layer_norm_eps
         )
 
     def forward(self, pixel_values: torch.Tensor):

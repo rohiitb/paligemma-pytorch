@@ -1,0 +1,11 @@
+# Ignore venv files
+venv/
+
+# Ignore pycache files
+__pycache__/
+
+# Ignore python-version
+.python-version
+
+# Ignore .DS_Store
+.DS_Store
